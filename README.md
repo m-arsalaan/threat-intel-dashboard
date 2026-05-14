@@ -4,7 +4,7 @@ A web-based threat intelligence platform that aggregates, enriches, and correlat
 
 Built to simulate the kind of tooling used by SOC teams at MSSPs and enterprise security operations.
 
-![Dashboard](screenshots/06-dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 
 ---
 
@@ -24,10 +24,10 @@ Security teams need to know which IP addresses, domains, and files are being use
 ## Screenshots
 
 ### Dashboard
-![Dashboard](screenshots/06-dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 
 ### IOC Table
-![IOC Table](screenshots/07-ioc_table.png)
+![IOC Table](screenshots/ioc_table.png)
 
 ### Threat Lookup
 ![Lookup 1](screenshots/01-lookup.png)
