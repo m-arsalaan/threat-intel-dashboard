@@ -20,6 +20,35 @@ Security teams need to know which IP addresses, domains, and files are being use
 6. **Refreshes** automatically every 60 minutes via background scheduler
 
 ---
+## Why this matters for SOC teams
+
+Security teams receive thousands of indicators of compromise daily from multiple threat feeds. Without automation, analysts spend hours manually checking IPs and domains against reputation databases — one at a time.
+
+This tool demonstrates the core workflow of a threat intelligence platform:
+
+- **Reduce analyst workload** — automated ingestion and enrichment means no manual API lookups
+- **Prioritise what matters** — confidence scoring surfaces the highest-risk IOCs first
+- **Cross-feed correlation** — an indicator seen in 3 threat reports is more dangerous than one seen in 1, and the scoring reflects that
+- **Audit trail** — timestamped logs mean every lookup and refresh is recorded
+
+This is the same pipeline used by commercial tools like ThreatConnect and MISP — built from scratch using open-source APIs.
+
+---
+
+## MITRE ATT&CK Mapping
+
+Each IOC type collected by this tool maps to specific MITRE ATT&CK tactics and techniques used by real threat actors:
+
+| IOC Type | ATT&CK Tactic | Technique | Example |
+|---|---|---|---|
+| Malicious IP | Command & Control | T1071 — Application Layer Protocol | C2 server communicating over HTTP |
+| Malicious IP | Defense Evasion | T1090 — Proxy | Traffic routed through compromised host |
+| Malicious Domain | Initial Access | T1566 — Phishing | Credential harvesting landing page |
+| Malicious Domain | Command & Control | T1568 — Dynamic Resolution | Fast-flux DNS for C2 infrastructure |
+| File Hash | Execution | T1204 — User Execution | Malicious file opened by victim |
+| File Hash | Defense Evasion | T1027 — Obfuscated Files | Packed or encrypted malware sample |
+
+Understanding these mappings means a SOC analyst can use this tool not just to flag IOCs but to understand *what attack stage they represent* — enabling faster triage and better incident response.
 
 ## Screenshots
 
@@ -219,8 +248,7 @@ All activity is logged with timestamps to `logs/threatintel_YYYY-MM-DD.log`:
 
 ## Author
 
-**Muhammad Arslan**  
-ISO/IEC 27001:2022 Lead Auditor | Cybersecurity Student, Air University  
+**Muhammad Arslan**
 [LinkedIn](https://linkedin.com/in/itzarslan4) | [GitHub](https://github.com/m-arsalaan)
 
 ---
