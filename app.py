@@ -1,3 +1,4 @@
+from compliance.iso_mapper import get_compliance_report
 from flask import Flask, render_template, request, jsonify
 from database.db import init_db, get_all_iocs, get_ioc_stats, search_ioc
 from collectors.otx_collector import fetch_otx_pulses
@@ -16,6 +17,11 @@ def dashboard():
     recent_iocs = get_all_iocs(limit=20)
     return render_template("dashboard.html", stats=stats, iocs=recent_iocs)
 
+@app.route("/compliance")
+def compliance_view():
+    """ISO 27001 compliance mapping page"""
+    report = get_compliance_report()
+    return render_template("compliance.html", report=report)
 
 @app.route("/iocs")
 def ioc_table():

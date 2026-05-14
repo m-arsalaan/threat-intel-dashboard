@@ -63,6 +63,8 @@ Understanding these mappings means a SOC analyst can use this tool not just to f
 ![Lookup 2](screenshots/02-lookup.png)
 ![Lookup 3](screenshots/03-lookup.png)
 
+### ISO 27001 Compliance View
+![Compliance](screenshots/compliance.png)
 ---
 
 ## Features
@@ -78,7 +80,7 @@ Understanding these mappings means a SOC analyst can use this tool not just to f
 - **Sortable IOC table** — click any column header to sort
 - **Timestamped logging** — all activity logged to `logs/` directory
 - **Input validation** — all lookup queries sanitized before processing
-
+- **ISO 27001 compliance mapping** — IOC findings mapped to Annex A controls with severity ratings and remediation recommendations
 ---
 
 ## Tech Stack
@@ -122,7 +124,7 @@ Browser → Dashboard / IOC Table / Lookup
 
 ```
 threat-intel-dashboard/
-├── app.py                    # Flask routes and app entry point
+├── app.py                    # Flask routes: / · /iocs · /lookup · /compliance · /api/*
 ├── config.py                 # API keys and settings (loaded from .env)
 ├── scheduler.py              # Background refresh scheduler
 ├── requirements.txt
@@ -133,6 +135,8 @@ threat-intel-dashboard/
 │   └── virustotal.py         # Hash/IP/domain lookup
 ├── correlator/
 │   └── ioc_correlator.py     # Confidence scoring and correlation
+├── compliance/
+│   └── iso_mapper.py         # ISO 27001 Annex A control mapping
 ├── database/
 │   ├── models.py             # SQLite table schema
 │   └── db.py                 # All database operations

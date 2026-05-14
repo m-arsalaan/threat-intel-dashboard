@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}ISO 27001 Compliance — ThreatIntel{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1" style="color:#1a1a2e;font-weight:700">
+            <i class="bi bi-shield-check" style="color:#2a9d8f"></i>
+            ISO 27001 Compliance View
+        </h2>
+        <p class="text-muted mb-0" style="font-size:0.85rem">
+            IOC findings mapped to ISO/IEC 27001:2022 Annex A controls
+        </p>
+    </div>
+    <a href="/" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#4361ee">
+                <i class="bi bi-shield-exclamation"></i>
+            </div>
+            <div class="stat-number">{{ report.summary.controls_violated }}</div>
+            <div class="stat-label">Controls Violated</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#e63946">
+                <i class="bi bi-exclamation-octagon"></i>
+            </div>
+            <div class="stat-number">{{ report.summary.critical }}</div>
+            <div class="stat-label">Critical Findings</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#f4a261">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="stat-number">{{ report.summary.high }}</div>
+            <div class="stat-label">High Findings</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#2a9d8f">
+                <i class="bi bi-database"></i>
+            </div>
+            <div class="stat-number">{{ report.summary.total_iocs }}</div>
+            <div class="stat-label">Total IOCs Analysed</div>
+        </div>
+    </div>
+</div>
+
+<!-- Context box -->
+<div class="chart-card mb-4"
+     style="border-left:4px solid #2a9d8f;border-radius:0 12px 12px 0">
+    <p style="font-size:0.85rem;color:#555;margin:0;line-height:1.7">
+        <strong style="color:#1a1a2e">How to read this report:</strong>
+        Each finding below represents active IOCs in your threat database
+        that map to a specific ISO 27001 Annex A control.
+        A violated control means your environment has live threat indicators
+        relevant to that security domain — requiring immediate attention
+        or documented risk acceptance.
+    </p>
+</div>
+
+<!-- Findings -->
+{% for finding in report.findings %}
+<div class="chart-card mb-3">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-dark"
+                      style="font-size:0.75rem;font-family:monospace">
+                    {{ finding.control_id }}
+                </span>
+                <span class="badge bg-{{ finding.severity_color }}
+                    {% if finding.severity == 'HIGH' %}text-dark{% endif %}">
+                    {{ finding.severity }}
+                </span>
+            </div>
+            <h6 style="color:#1a1a2e;font-weight:600;margin:0">
+                {{ finding.control_name }}
+            </h6>
+            <small class="text-muted">{{ finding.domain }}</small>
+        </div>
+        <div class="text-end">
+            <div style="font-size:1.6rem;font-weight:700;
+                        color:{% if finding.severity == 'CRITICAL' %}#e63946
+                        {% elif finding.severity == 'HIGH' %}#f4a261
+                        {% elif finding.severity == 'MEDIUM' %}#4361ee
+                        {% else %}#888{% endif %}">
+                {{ finding.ioc_count }}
+            </div>
+            <small class="text-muted">IOCs</small>
+        </div>
+    </div>
+
+    <!-- Control description -->
+    <p style="font-size:0.82rem;color:#555;margin-bottom:10px">
+        <strong style="color:#1a1a2e">Control requirement:</strong>
+        {{ finding.description }}
+    </p>
+
+    <!-- Recommendation -->
+    <div style="background:#f8f9ff;border-radius:8px;
+                padding:10px 14px;margin-bottom:12px">
+        <p style="font-size:0.82rem;margin:0;color:#333">
+            <i class="bi bi-lightbulb" style="color:#f4a261"></i>
+            <strong> Recommendation:</strong> {{ finding.recommendation }}
+        </p>
+    </div>
+
+    <!-- Stats row -->
+    <div class="row g-2 mb-3">
+        <div class="col-auto">
+            <span style="font-size:0.78rem;background:#f0f2f5;
+                         padding:4px 10px;border-radius:6px;color:#555">
+                <i class="bi bi-tag"></i>
+                Threat type: <strong>{{ finding.threat_type }}</strong>
+            </span>
+        </div>
+        <div class="col-auto">
+            <span style="font-size:0.78rem;background:#f0f2f5;
+                         padding:4px 10px;border-radius:6px;color:#555">
+                <i class="bi bi-shield-exclamation"></i>
+                High confidence: <strong>{{ finding.high_confidence_count }}</strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- Sample IOCs -->
+    {% if finding.sample_iocs %}
+    <div>
+        <p style="font-size:0.75rem;color:#888;
+                  text-transform:uppercase;
+                  letter-spacing:0.4px;margin-bottom:6px">
+            Sample indicators
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            {% for ioc in finding.sample_iocs %}
+            <a href="/lookup?q={{ ioc.indicator }}"
+               style="font-size:0.78rem;font-family:monospace;
+                      background:#eef0ff;color:#4361ee;
+                      padding:3px 10px;border-radius:5px;
+                      text-decoration:none">
+                {{ ioc.indicator[:40] }}{% if ioc.indicator|length > 40 %}...{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% endblock %}
