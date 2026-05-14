@@ -1,0 +1,191 @@
+body {
+    background-color: #f0f2f5;
+    color: #1a1a2e;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.navbar-brand {
+    color: #1a1a2e !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.nav-link {
+    color: #555 !important;
+    font-size: 0.9rem;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #4361ee !important;
+}
+
+/* Stat cards */
+.stat-card {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.78rem;
+    color: #888;
+    margin-top: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* Chart cards */
+.chart-card {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.chart-card h6 {
+    color: #555;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Tables */
+.table {
+    color: #1a1a2e;
+    --bs-table-bg: #ffffff;
+    --bs-table-hover-bg: #f5f7ff;
+    border-color: #eee;
+}
+
+.table th {
+    color: #888;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+    font-weight: 600;
+}
+
+.table td {
+    border-color: #f0f0f0;
+    vertical-align: middle;
+}
+
+.font-monospace {
+    font-size: 0.82rem;
+    color: #4361ee;
+}
+
+/* Score colors */
+.score-high { color: #e63946; font-weight: 600; }
+.score-med  { color: #f4a261; font-weight: 600; }
+.score-low  { color: #2a9d8f; font-weight: 600; }
+
+/* Lookup page */
+.lookup-card {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 680px;
+    margin: 2rem auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.result-card {
+    background: #f8f9ff;
+    border: 1px solid #e8eaf0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+/* Form controls light */
+.form-control, .form-select {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #1a1a2e;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #fff;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+    color: #1a1a2e;
+}
+
+/* Badge overrides */
+.badge {
+    font-weight: 500;
+    font-size: 0.72rem;
+}
+
+/* Page title */
+h2 {
+    color: #1a1a2e !important;
+}
+
+.text-muted {
+    color: #888 !important;
+}
+
+/* Progress bars */
+.progress {
+    background-color: #eee;
+}
+
+/* Buttons */
+.btn-outline-warning {
+    color: #f4a261;
+    border-color: #f4a261;
+}
+
+.btn-outline-warning:hover {
+    background-color: #f4a261;
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: #888;
+    border-color: #ddd;
+}
+
+.btn-outline-info {
+    color: #4361ee;
+    border-color: #4361ee;
+}
+
+.btn-outline-info:hover {
+    background-color: #4361ee;
+    color: white;
+}

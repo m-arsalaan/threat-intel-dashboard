@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Lookup — ThreatIntel{% endblock %}
+
+{% block content %}
+
+<div class="lookup-card">
+    <h4 class="text-white mb-1">
+        <i class="bi bi-search text-info"></i> IOC Lookup
+    </h4>
+    <p class="text-muted small mb-3">
+        Enter any IP address, domain, or file hash (MD5/SHA1/SHA256)
+    </p>
+
+    <div class="input-group mb-3">
+        <input type="text" id="lookupInput"
+            class="form-control bg-dark text-light border-secondary"
+            placeholder="e.g. 1.2.3.4 or evil.com or a1b2c3d4..."
+            value="{{ request.args.get('q', '') }}">
+        <button class="btn btn-info" onclick="doLookup()">
+            <i class="bi bi-search"></i> Lookup
+        </button>
+    </div>
+
+    <div class="text-muted small mb-3">
+        <i class="bi bi-info-circle"></i>
+        Checks your local database + VirusTotal in real time
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="loading" class="text-center py-4" style="display:none">
+        <div class="spinner-border text-info" role="status"></div>
+        <p class="text-muted mt-2 small">Querying threat intelligence sources...</p>
+    </div>
+
+    <!-- Results -->
+    <div id="results" style="display:none">
+
+        <!-- Query info -->
+        <div class="result-card mb-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <span class="text-muted small">Query:</span>
+                    <span class="font-monospace text-info ms-2" id="resultQuery"></span>
+                </div>
+                <span class="badge bg-secondary" id="resultType"></span>
+            </div>
+        </div>
+
+        <!-- Local database results -->
+        <div id="localSection">
+            <h6 class="text-muted mb-2">
+                <i class="bi bi-database"></i> Local Database
+            </h6>
+            <div id="localResults" class="result-card mb-3"></div>
+        </div>
+
+        <!-- VirusTotal results -->
+        <h6 class="text-muted mb-2">
+            <i class="bi bi-shield-check"></i> VirusTotal Analysis
+        </h6>
+        <div id="vtResults" class="result-card"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-lookup if URL has ?q= parameter
+window.onload = function() {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) {
+        document.getElementById('lookupInput').value = q;
+        doLookup();
+    }
+}
+
+async function doLookup() {
+    const query = document.getElementById('lookupInput').value.trim();
+    if (!query) return;
+
+    // Show loading, hide results
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+
+    try {
+        const response = await fetch('/api/lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await response.json();
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('resultQuery').textContent = data.query;
+        document.getElementById('resultType').textContent = data.type.toUpperCase();
+
+        // Render local results
+        const localDiv = document.getElementById('localResults');
+        if (data.local_results && data.local_results.length > 0) {
+            const ioc = data.local_results[0];
+            localDiv.innerHTML = `
+                <div class="row g-2">
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Type</div>
+                        <div class="text-white">${ioc.type}</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Threat</div>
+                        <div class="text-white">${ioc.threat_type || 'unknown'}</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Country</div>
+                        <div class="text-white">${ioc.country || '—'}</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Abuse Score</div>
+                        <div class="fw-bold ${ioc.abuse_score > 70 ? 'text-danger' : ioc.abuse_score > 30 ? 'text-warning' : 'text-success'}">
+                            ${ioc.abuse_score}%
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="text-muted small">ASN</div>
+                        <div class="text-white font-monospace small">${ioc.asn || '—'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="text-muted small">Source</div>
+                        <div class="text-white small">${ioc.source}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            localDiv.innerHTML = '<p class="text-muted small mb-0">Not found in local database</p>';
+        }
+
+        // Render VirusTotal results
+        const vtDiv = document.getElementById('vtResults');
+        const vt = data.virustotal;
+
+        if (vt && !vt.error) {
+            const malicious = vt.malicious || 0;
+            const total = vt.total_vendors || 0;
+            const pct = total > 0 ? Math.round((malicious / total) * 100) : 0;
+            const color = malicious > 10 ? 'danger' : malicious > 0 ? 'warning' : 'success';
+            const label = malicious > 10 ? 'MALICIOUS' : malicious > 0 ? 'SUSPICIOUS' : 'CLEAN';
+
+            vtDiv.innerHTML = `
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="text-center">
+                        <div class="display-6 fw-bold text-${color}">${malicious}</div>
+                        <div class="text-muted small">of ${total} vendors</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small text-muted">Detection rate</span>
+                            <span class="badge bg-${color}">${label}</span>
+                        </div>
+                        <div class="progress" style="height:8px">
+                            <div class="progress-bar bg-${color}" style="width:${pct}%"></div>
+                        </div>
+                    </div>
+                </div>
+                ${vt.threat_names && vt.threat_names.length > 0 ? `
+                <div class="mt-2">
+                    <div class="text-muted small mb-1">Threat names detected:</div>
+                    ${vt.threat_names.map(n => `<span class="badge bg-danger me-1">${n}</span>`).join('')}
+                </div>` : ''}
+                ${vt.categories && vt.categories.length > 0 ? `
+                <div class="mt-2">
+                    <div class="text-muted small mb-1">Categories:</div>
+                    ${vt.categories.map(c => `<span class="badge bg-secondary me-1">${c}</span>`).join('')}
+                </div>` : ''}
+            `;
+        } else {
+            vtDiv.innerHTML = `<p class="text-muted small mb-0">${vt ? vt.error : 'No VirusTotal data'}</p>`;
+        }
+
+    } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        alert('Lookup failed: ' + e.message);
+    }
+}
+
+// Allow Enter key to trigger lookup
+document.getElementById('lookupInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') doLookup();
+});
+</script>
+{% endblock %}

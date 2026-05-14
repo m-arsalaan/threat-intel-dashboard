@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ThreatIntel{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1" style="color:#1a1a2e;font-weight:700">
+            <i class="bi bi-shield-exclamation" style="color:#e63946"></i>
+            Threat Intelligence Dashboard
+        </h2>
+        <p class="text-muted mb-0" style="font-size:0.85rem">
+            Live IOC monitoring — AlienVault OTX + AbuseIPDB + VirusTotal
+        </p>
+    </div>
+    <button class="btn btn-outline-warning btn-sm px-3" onclick="refreshFeed()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Feed
+    </button>
+</div>
+
+<!-- Stats cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#4361ee"><i class="bi bi-database-fill"></i></div>
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">Total IOCs</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#e63946"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="stat-number">{{ stats.high_confidence }}</div>
+            <div class="stat-label">High Confidence</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#f4a261"><i class="bi bi-link-45deg"></i></div>
+            <div class="stat-number">{{ stats.correlated }}</div>
+            <div class="stat-label">Correlated IOCs</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#2a9d8f"><i class="bi bi-hdd-network-fill"></i></div>
+            <div class="stat-number">{{ stats.by_type.get('ip', 0) }}</div>
+            <div class="stat-label">Malicious IPs</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-7">
+        <div class="chart-card">
+            <h6 class="mb-2">Threat Categories</h6>
+            <canvas id="threatChart" height="80"></canvas>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="chart-card">
+            <h6 class="mb-2">IOC Types</h6>
+            <div style="max-width:220px;margin:0 auto">
+                <canvas id="typeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Recent IOCs table -->
+<div class="chart-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">Recent High-Risk IOCs</h6>
+        <a href="/iocs" class="btn btn-outline-info btn-sm">View all →</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Indicator</th>
+                    <th>Type</th>
+                    <th>Threat</th>
+                    <th>Country</th>
+                    <th>Abuse Score</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ioc in iocs %}
+                <tr>
+                    <td class="font-monospace">{{ ioc.indicator }}</td>
+                    <td>
+                        <span class="badge
+                            {% if ioc.type == 'ip' %}bg-primary
+                            {% elif ioc.type == 'domain' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ ioc.type }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if ioc.threat_type == 'malware' %}bg-danger
+                            {% elif ioc.threat_type == 'phishing' %}bg-warning text-dark
+                            {% elif ioc.threat_type == 'botnet' %}bg-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ ioc.threat_type or 'unknown' }}
+                        </span>
+                    </td>
+                    <td style="font-size:0.82rem">{{ ioc.country or '—' }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height:5px;min-width:60px">
+                                <div class="progress-bar
+                                    {% if ioc.abuse_score > 70 %}bg-danger
+                                    {% elif ioc.abuse_score > 30 %}bg-warning
+                                    {% else %}bg-success{% endif %}"
+                                    style="width:{{ ioc.abuse_score }}%">
+                                </div>
+                            </div>
+                            <small class="
+                                {% if ioc.abuse_score > 70 %}score-high
+                                {% elif ioc.abuse_score > 30 %}score-med
+                                {% else %}score-low{% endif %}">
+                                {{ ioc.abuse_score }}%
+                            </small>
+                        </div>
+                    </td>
+                    <td style="font-size:0.78rem;color:#888">{{ ioc.source }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const threatData = {{ stats.by_threat | tojson }};
+const threatLabels = threatData.map(d => d.threat_type || 'unknown');
+const threatCounts = threatData.map(d => d.count);
+
+new Chart(document.getElementById('threatChart'), {
+    type: 'bar',
+    data: {
+        labels: threatLabels,
+        datasets: [{
+            label: 'IOC Count',
+            data: threatCounts,
+            backgroundColor: ['#e63946','#f4a261','#e9c46a','#2a9d8f','#4361ee','#7b2d8b'],
+            borderRadius: 6,
+            borderSkipped: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                ticks: { color: '#888', font: { size: 11 } },
+                grid: { color: '#f0f0f0' }
+            },
+            x: {
+                ticks: { color: '#888', font: { size: 11 } },
+                grid: { display: false }
+            }
+        }
+    }
+});
+
+const typeData = {{ stats.by_type | tojson }};
+new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(typeData),
+        datasets: [{
+            data: Object.values(typeData),
+            backgroundColor: ['#4361ee','#f4a261','#7b2d8b','#2a9d8f'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '65%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#555',
+                    font: { size: 12 },
+                    padding: 16,
+                    usePointStyle: true
+                }
+            }
+        }
+    }
+});
+
+function refreshFeed() {
+    const btn = document.querySelector('button');
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Refreshing...';
+    btn.disabled = true;
+    fetch('/api/refresh', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(() => {
+            alert('Refresh failed');
+            btn.disabled = false;
+        });
+}
+</script>
+{% endblock %}

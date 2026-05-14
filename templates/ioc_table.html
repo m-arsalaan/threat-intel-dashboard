@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}IOC Table — ThreatIntel{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1" style="color:#1a1a2e;font-weight:700">
+            <i class="bi bi-table" style="color:#4361ee"></i> IOC Table
+        </h2>
+        <p class="text-muted mb-0" style="font-size:0.85rem">
+            All indicators of compromise — {{ iocs|length }} total
+        </p>
+    </div>
+    <a href="/" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
+</div>
+
+<!-- Filters -->
+<div class="chart-card mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <input type="text" id="filterInput"
+                class="form-control form-control-sm"
+                placeholder="Search indicator, country, threat...">
+        </div>
+        <div class="col-auto">
+            <select id="typeFilter" class="form-select form-select-sm">
+                <option value="">All types</option>
+                <option value="ip">IP</option>
+                <option value="domain">Domain</option>
+                <option value="hash">Hash</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <select id="threatFilter" class="form-select form-select-sm">
+                <option value="">All threats</option>
+                <option value="malware">Malware</option>
+                <option value="phishing">Phishing</option>
+                <option value="scanning">Scanning</option>
+                <option value="botnet">Botnet</option>
+                <option value="exploitation">Exploitation</option>
+                <option value="spam">Spam</option>
+                <option value="suspicious">Suspicious</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <span class="text-muted" style="font-size:0.82rem" id="rowCount"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="chart-card">
+    <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0" id="iocTable">
+            <thead>
+                <tr>
+                    <th style="cursor:pointer" onclick="sortTable(0)">Indicator ↕</th>
+                    <th style="cursor:pointer" onclick="sortTable(1)">Type ↕</th>
+                    <th style="cursor:pointer" onclick="sortTable(2)">Threat ↕</th>
+                    <th style="cursor:pointer" onclick="sortTable(3)">Country ↕</th>
+                    <th>ASN</th>
+                    <th style="cursor:pointer" onclick="sortTable(5)">Abuse Score ↕</th>
+                    <th>Correlated</th>
+                    <th>First Seen</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="iocBody">
+                {% for ioc in iocs %}
+                <tr data-type="{{ ioc.type }}" data-threat="{{ ioc.threat_type or '' }}">
+                    <td class="font-monospace"
+                        style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                        {{ ioc.indicator }}
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if ioc.type == 'ip' %}bg-primary
+                            {% elif ioc.type == 'domain' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ ioc.type }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if ioc.threat_type == 'malware' %}bg-danger
+                            {% elif ioc.threat_type == 'phishing' %}bg-warning text-dark
+                            {% elif ioc.threat_type == 'botnet' %}bg-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ ioc.threat_type or 'unknown' }}
+                        </span>
+                    </td>
+                    <td style="font-size:0.82rem">{{ ioc.country or '—' }}</td>
+                    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                        <span style="font-size:0.78rem;color:#888">{{ ioc.asn or '—' }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height:4px;min-width:50px">
+                                <div class="progress-bar
+                                    {% if ioc.abuse_score > 70 %}bg-danger
+                                    {% elif ioc.abuse_score > 30 %}bg-warning
+                                    {% else %}bg-success{% endif %}"
+                                    style="width:{{ ioc.abuse_score }}%">
+                                </div>
+                            </div>
+                            <small class="
+                                {% if ioc.abuse_score > 70 %}score-high
+                                {% elif ioc.abuse_score > 30 %}score-med
+                                {% else %}score-low{% endif %}">
+                                {{ ioc.abuse_score }}%
+                            </small>
+                        </div>
+                    </td>
+                    <td>
+                        {% if ioc.is_correlated %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-link-45deg"></i> Yes
+                            </span>
+                        {% else %}
+                            <span style="font-size:0.78rem;color:#bbb">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-size:0.78rem;color:#888">
+                            {{ ioc.first_seen[:10] if ioc.first_seen else '—' }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/lookup?q={{ ioc.indicator }}"
+                           class="btn btn-outline-info btn-sm py-0 px-2"
+                           style="font-size:0.75rem">
+                            <i class="bi bi-search"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTable() {
+    const text = document.getElementById('filterInput').value.toLowerCase();
+    const type = document.getElementById('typeFilter').value;
+    const threat = document.getElementById('threatFilter').value;
+    const rows = document.querySelectorAll('#iocBody tr');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const rowText = row.textContent.toLowerCase();
+        const rowType = row.dataset.type;
+        const rowThreat = row.dataset.threat;
+
+        const matchText = !text || rowText.includes(text);
+        const matchType = !type || rowType === type;
+        const matchThreat = !threat || rowThreat === threat;
+
+        if (matchText && matchType && matchThreat) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('rowCount').textContent = `Showing ${visible} IOCs`;
+}
+
+document.getElementById('filterInput').addEventListener('input', filterTable);
+document.getElementById('typeFilter').addEventListener('change', filterTable);
+document.getElementById('threatFilter').addEventListener('change', filterTable);
+
+let sortDir = {};
+function sortTable(col) {
+    const tbody = document.getElementById('iocBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    sortDir[col] = !sortDir[col];
+
+    rows.sort((a, b) => {
+        const aText = a.cells[col].textContent.trim();
+        const bText = b.cells[col].textContent.trim();
+        const aNum = parseFloat(aText);
+        const bNum = parseFloat(bText);
+
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return sortDir[col] ? aNum - bNum : bNum - aNum;
+        }
+        return sortDir[col]
+            ? aText.localeCompare(bText)
+            : bText.localeCompare(aText);
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+filterTable();
+</script>
+{% endblock %}
