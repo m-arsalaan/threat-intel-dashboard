@@ -4,7 +4,7 @@ A web-based threat intelligence platform that aggregates, enriches, and correlat
 
 Built to simulate the kind of tooling used by SOC teams at MSSPs and enterprise security operations.
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](screenshots/06-dashboard.png)
 
 ---
 
@@ -24,15 +24,15 @@ Security teams need to know which IP addresses, domains, and files are being use
 ## Screenshots
 
 ### Dashboard
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](screenshots/06-dashboard.png)
 
 ### IOC Table
-![IOC Table](screenshots/ioc_table.png)
+![IOC Table](screenshots/07-ioc_table.png)
 
 ### Threat Lookup
-![Lookup](screenshots/01-lookup.png)
-![Lookup](screenshots/02-lookup.png)
-![Lookup](screenshots/03-lookup.png)
+![Lookup 1](screenshots/01-lookup.png)
+![Lookup 2](screenshots/02-lookup.png)
+![Lookup 3](screenshots/03-lookup.png)
 
 ---
 
@@ -68,6 +68,8 @@ Security teams need to know which IP addresses, domains, and files are being use
 ---
 
 ## Architecture
+
+```
 AlienVault OTX (threat feed)
 ↓
 collectors/otx_collector.py
@@ -83,10 +85,13 @@ scheduler.py (auto-refresh every 60 min)
 app.py (Flask web server)
 ↓
 Browser → Dashboard / IOC Table / Lookup
+```
 
 ---
 
 ## Project Structure
+
+```
 threat-intel-dashboard/
 ├── app.py                    # Flask routes and app entry point
 ├── config.py                 # API keys and settings (loaded from .env)
@@ -112,6 +117,7 @@ threat-intel-dashboard/
 ├── static/
 │   └── style.css             # Custom light theme styles
 └── screenshots/              # Project screenshots for README
+```
 
 ---
 
@@ -146,9 +152,12 @@ nano .env
 ```
 
 Fill in your keys:
+
+```
 OTX_API_KEY=your_key_here
 ABUSEIPDB_API_KEY=your_key_here
 VIRUSTOTAL_API_KEY=your_key_here
+```
 
 ### 5. Run the application
 
@@ -174,22 +183,25 @@ Enter any IP address, domain, or file hash (MD5/SHA1/SHA256). The tool checks yo
 ---
 
 ## Example Lookups
-Known malicious IP
-91.107.247.163
-WannaCry ransomware hash
-84c82835a5d21bbcf75a61706d8ab549
-Clean IP (Google DNS — should return 0 detections)
-8.8.8.8
+
+```
+Known malicious IP:        91.107.247.163
+WannaCry ransomware hash:  84c82835a5d21bbcf75a61706d8ab549
+Clean IP (Google DNS):     8.8.8.8
+```
 
 ---
 
 ## Logging
 
 All activity is logged with timestamps to `logs/threatintel_YYYY-MM-DD.log`:
+
+```
 2026-05-14 05:11:19 [INFO] Starting IOC collection from AlienVault OTX...
 2026-05-14 05:11:22 [INFO] Found 10 threat pulses
 2026-05-14 05:11:25 [INFO] Collection complete — 257 IOCs saved to database
 2026-05-14 05:11:51 [INFO] Lookup query received: 91.107.247.163
+```
 
 ---
 
@@ -207,31 +219,13 @@ All activity is logged with timestamps to `logs/threatintel_YYYY-MM-DD.log`:
 
 ## Author
 
-**Muhammad Arslan**
-ISO/IEC 27001:2022 Lead Auditor | Cybersecurity Student, Air University
-[LinkedIn](https://linkedin.com/in/YOUR_PROFILE) | [GitHub](https://github.com/YOUR_USERNAME)
+**Muhammad Arslan**  
+ISO/IEC 27001:2022 Lead Auditor | Cybersecurity Student, Air University  
+[LinkedIn](https://linkedin.com/in/itzarslan4) | [GitHub](https://github.com/m-arsalaan)
 
 ---
 
 ## Disclaimer
 
-This tool is built for educational and defensive security purposes only.
-All threat data is sourced from publicly available open-source intelligence feeds.
----
-
-## Future Improvements
-
-- [ ] Docker + docker-compose for one-command deployment
-- [ ] PDF export of IOC report
-- [ ] User authentication for multi-user SOC environments
-- [ ] Additional feeds — Abuse.ch, Emerging Threats, MISP
-- [ ] MITRE ATT&CK TTP mapping per threat campaign
-- [ ] Email alerts for critical IOC detection
-- [ ] Redis caching to reduce API rate limit usage
-
----
-
-## Disclaimer
-
-This tool is built for educational and defensive security purposes only.
+This tool is built for educational and defensive security purposes only.  
 All threat data is sourced from publicly available open-source intelligence feeds.
